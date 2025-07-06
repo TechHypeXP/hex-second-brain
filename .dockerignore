@@ -1,0 +1,13 @@
+.next/
+node_modules/
+npm-debug.log
+.env
+.env*.local
+.git/
+.gitignore
+.vercel/
+.swc/
+.vscode/
+temp/
+build/
+dist/
