@@ -24,26 +24,15 @@
     ],
     "baseUrl": ".",
     "paths": {
-"@/lib/*": ["lib/*"]
-      "@/lib/*": [
-        "lib/*"
-      ],
-      "@/app/*": [
-        "app/*"
-      ],
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/config/*": [
-        "config/*"
-      ],
-      "@/pages/*": [
-        "pages/*"
-      ]
+      "@/lib/*": ["lib/*"],
+      "@/app/*": ["app/*"],
+      "@/components/*": ["components/*"],
+      "@/config/*": ["config/*"],
+      "@/pages/*": ["pages/*"]
     },
     "allowImportingTsExtensions": true
-    },
-    "include": [
+  },
+  "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
