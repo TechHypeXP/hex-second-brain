@@ -13,6 +13,7 @@
     "@pinecone-database/pinecone": "^6.1.1",
     "@prisma/client": "^6.11.1",
     "@supabase/supabase-js": "^2.50.3",
+    "axios": "^1.10.0",
     "bullmq": "^5.56.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -29,6 +30,7 @@
     "zod": "^3.25.74"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

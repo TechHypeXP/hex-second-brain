@@ -1,5 +1,5 @@
-import prisma from '../lib/prisma'; // Import the existing Prisma client
-import { redis } from '../lib/redis'; // Import the existing Redis client
+import { prisma } from '@/lib/prisma'; // Import the existing Prisma client
+import { redis } from '@/lib/redis'; // Import the existing Redis client
 import { env } from 'process';
 
 // Centralized configuration for all services
