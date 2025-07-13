@@ -1,6 +1,6 @@
-import cuid from "cuid";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-// Sanitize content by removing excessive whitespace and trimming
-export function sanitizeContent(content: string): string {
-  return content.replace(/\s+/g, " ").trim();
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }

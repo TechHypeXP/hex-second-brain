@@ -1,18 +1,41 @@
-# File: docker-compose.yml
-
-version: '3.8'
 services:
-  db:
-    image: postgres:15
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
+  # Service for your Next.js application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - '5432:5432'
+      - "3000:3000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+     - .:/app
+     - /app/node_modules
+    # CORRECTED: Use env_file to load all variables from your .env file automatically.
+    # This is much cleaner and more maintainable.
+    env_file:
+      - .env
+    # NOTE: REDIS_URL is defined here because its value is specific to the Docker network.
+    environment:
+      REDIS_URL: "redis://redis:6379"
+    # ENHANCEMENT: Wait for Redis to be healthy, not just started.
+    depends_on:
+      redis:
+        condition: service_healthy
 
+  # Service for the local Redis instance (for BullMQ)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    # ENHANCEMENT: Add a healthcheck to ensure Redis is ready for connections.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Define named volumes
 volumes:
-  postgres_data:
+  redis_data:
