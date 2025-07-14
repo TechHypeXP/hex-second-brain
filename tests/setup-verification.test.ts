@@ -36,12 +36,11 @@ test.describe('Project Environment Setup Validation', () => {
     });
   });
 
-  test('should verify lib/config.ts exports all required configurations', async () => {
-    const configPath = path.join(process.cwd(), 'lib/config.ts');
+  test('should verify config/system.ts exports the systemConfig object', async () => {
+    const configPath = path.join(process.cwd(), 'config/system.ts');
     expect(fs.existsSync(configPath)).toBeTruthy();
     
     const configContent = fs.readFileSync(configPath, 'utf8');
-    expect(configContent).toContain('export { prisma, redis, genAI, pinecone }');
     expect(configContent).toContain('export const systemConfig');
   });
 

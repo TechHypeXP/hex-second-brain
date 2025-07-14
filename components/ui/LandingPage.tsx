@@ -11,34 +11,6 @@ export default function LandingPage() {
       {/* Background animation placeholder */}
       <CloudBackground />
 
-      <motion.header
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6 flex justify-between items-center"
-      >
-        <div className="text-2xl font-bold">Second Brain</div>
-        <nav>
-          <ul className="flex space-x-6">
-            <li>
-              <Link href="#features" className="hover:underline">
-                Features
-              </Link>
-            </li>
-            <li>
-              <Link href="#pricing" className="hover:underline">
-                Pricing
-              </Link>
-            </li>
-            <li>
-              <Link href="#contact" className="hover:underline">
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </motion.header>
-
       <main className="relative z-10 flex flex-col items-center justify-center flex-grow text-center px-4">
         <motion.h1
           initial={{ opacity: 0, y: 50 }}

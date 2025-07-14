@@ -6,7 +6,7 @@ import Redis from 'ioredis';
 
 test.describe('Phase 1 Integration QA', () => {
   const prisma = new PrismaClient();
-  const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null });
 
   test('Database Connection and Basic CRUD', async () => {
     // Test database connection and basic operation

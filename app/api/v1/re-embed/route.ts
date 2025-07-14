@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { systemConfig } from '@/config/system';
 
 // Define the schema for the incoming request body
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request payload', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request payload', details: error.issues }, { status: 400 });
     }
     console.error('Error during resource re-embedding:', error);
     return NextResponse.json({ error: 'Failed to process re-embedding request' }, { status: 500 });

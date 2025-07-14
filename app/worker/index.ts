@@ -1,10 +1,15 @@
 import { Worker, Job } from "bullmq"; // Add Job import
-import { redis, genAI } from "../../lib/config";
-import prisma from "../../lib/prisma";
+import { redis } from "@/lib/redis";
+import { GoogleGenerativeAI } from '@google/generative-ai'; // Import the actual client
+import { prisma } from "@/lib/prisma";
 import { YoutubeTranscript } from "youtube-transcript";
 import * as cheerio from "cheerio";
-import { jobQueue } from "../../lib/queue";
-import { sanitizeContent } from "../../lib/utils"; // Add sanitizeContent import
+import { jobQueue } from "@/lib/queue";
+import { sanitizeContent } from "@/lib/utils"; // Add sanitizeContent import
+import { Prisma } from '@prisma/client'; // Import Prisma types
+
+// Initialize genAI client properly
+const genAI: GoogleGenerativeAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string);
 
 interface IngestionJobData {
   batchId: string;
@@ -21,64 +26,26 @@ interface IngestionJobData {
   };
 }
 
-// Ingestion Agent
-async function ingestionAgent(job: Job) {
-  const { taskId, sourceUrl, fileBuffer } = job.data;
-  
-  // Log start
-  await prisma.executionLog.create({
-    data: {
-      id: `ingestion-${taskId}`,
-      taskId,
-      taskName: "Ingestion Agent",
-      status: "PENDING"
-    }
-  });
-
-  try {
-    let content: string;
-    
-    if (sourceUrl) {
-      // Fetch and sanitize URL content
-      const response = await fetch(sourceUrl);
-      if (!response.ok) throw new Error(`Failed to fetch URL: ${response.statusText}`);
-      content = sanitizeContent(await response.text());
-    } else if (fileBuffer) {
-      // Process file buffer
-      content = sanitizeContent(fileBuffer.toString());
-    } else {
-      throw new Error("No source provided");
-    }
-
-    // Log completion
-    await prisma.executionLog.update({
-      where: { id: taskId },
-      data: {
-        status: "COMPLETED",
-        endTime: new Date()
-      }
-    });
-
-    return { content };
-  } catch (error) {
-    // Log failure
-    await prisma.executionLog.update({
-      where: { id: taskId },
-      data: {
-        status: "FAILED",
-        errorMessage: (error as Error).message,
-        endTime: new Date()
-      }
-    });
-    throw error;
-  }
+// Define the structure for the synthesis opinion output
+interface SynthesisOpinionOutput {
+  executiveSummary?: string;
+  keyInsights?: string;
+  immediateActions?: string;
+  criticalWarnings?: string;
+  keyMetrics?: Record<string, any>;
+  toolsResources?: Record<string, any>;
+  peopleCompanies?: string[];
+  primaryKeywords?: string[];
+  semanticTags?: string[];
+  questionBasedTags?: string[];
+  disclaimer?: string;
 }
 
 interface SynthesisOpinionJobData {
   batchId: string;
   resourceId: string;
-  defensiveAnalysisOutput: any;
-  internalCoherenceOutput: any;
+  defensiveAnalysisOutput: unknown; // Changed from any
+  internalCoherenceOutput: unknown; // Changed from any
   userId: string;
   config: {
     embeddingModel: string;
@@ -89,7 +56,7 @@ interface SynthesisOpinionJobData {
 interface PersistenceJobData {
   batchId: string;
   resourceId: string;
-  synthesisOpinionOutput: any;
+  synthesisOpinionOutput: SynthesisOpinionOutput; // Use the defined interface
   userId: string;
   config: {
     embeddingModel: string;
@@ -106,13 +73,13 @@ interface DefensiveAnalysisJobData {
     embeddingModel: string;
     chunkSize: number;
   };
-  defensiveAnalysisOutput: any; // Add this to pass the output
+  defensiveAnalysisOutput: unknown; // Changed from any
 }
 
 interface InternalCoherenceJobData {
   batchId: string;
   resourceId: string;
-  defensiveAnalysisOutput: any;
+  defensiveAnalysisOutput: unknown; // Changed from any
   userId: string;
   config: {
     embeddingModel: string;
@@ -146,7 +113,7 @@ const worker = new Worker(
           if (resource.url) {
             if (resource.type === "youtube") {
               const transcript = await YoutubeTranscript.fetchTranscript(resource.url);
-              rawContent = transcript.map((t) => t.text).join(" ");
+              rawContent = transcript.map((t: { text: string }) => t.text).join(" ");
             } else if (resource.type === "article") {
               const response = await fetch(resource.url);
               if (!response.ok) {
@@ -195,13 +162,13 @@ const worker = new Worker(
             },
             { jobId: `defensiveAnalysis-${resource.id}` }
           );
-        } catch (error: any) {
+        } catch (error) { // Changed from 'error: any'
           console.error(`Ingestion failed for resource ${resource.id}:`, error);
           await prisma.executionLog.update({
             where: { id: taskId },
             data: {
               status: "FAILED",
-              errorMessage: error.message,
+              errorMessage: (error as Error).message, // Type assertion for error message
               endTime: new Date(),
             },
           });
@@ -234,7 +201,8 @@ const worker = new Worker(
       });
 
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Explicitly type genAI for getGenerativeModel
+        const model = (genAI as GoogleGenerativeAI).getGenerativeModel({ model: "gemini-pro" });
         const prompt = `Analyze the following text for logical fallacies, biases, and weaknesses. Provide the output as a JSON object with an array of findings. Each finding should include 'type' (e.g., 'Logical Fallacy', 'Bias', 'Weak Argument'), 'quote' (the exact text from the document), and 'explanation' (why it's a weakness).
 
         Text:
@@ -245,10 +213,10 @@ const worker = new Worker(
         const text = response.text();
 
         // Attempt to parse the JSON output. This might need robust error handling.
-        let analysisOutput: any;
+        let analysisOutput: unknown; // Changed from any
         try {
           analysisOutput = JSON.parse(text);
-        } catch (jsonError) {
+        } catch { // Removed jsonError as it's not used
           console.warn("AI response was not valid JSON, attempting to extract JSON from text:", text);
           // Try to extract JSON from the text if the direct parse fails
           const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
@@ -284,13 +252,13 @@ const worker = new Worker(
           },
           { jobId: `internalCoherence-${resourceId}` }
         );
-      } catch (error: any) {
+      } catch (error) { // Changed from 'error: any'
         console.error(`Defensive analysis failed for resource ${resourceId}:`, error);
         await prisma.executionLog.update({
           where: { id: taskId },
           data: {
             status: "FAILED",
-            errorMessage: error.message,
+            errorMessage: (error as Error).message, // Type assertion for error message
             endTime: new Date(),
           },
         });
@@ -317,12 +285,12 @@ const worker = new Worker(
 
       try {
         // Implement pgvector similarity search
-        const { performVectorSimilaritySearch } = await import('../../lib/vector-search');
+        const { performVectorSimilaritySearch } = await import('@/lib/vector-search');
         
         // Generate embedding for the defensive analysis output
         const model = genAI.getGenerativeModel({ model: "embedding-001" });
-        const embeddingResponse = await model.embedContent(JSON.stringify(defensiveAnalysisOutput));
-        const queryEmbedding = embeddingResponse.embedding.values;
+        await model.embedContent(JSON.stringify(defensiveAnalysisOutput));
+        // Removed unused variable: const queryEmbedding = embeddingResponse.values;
 
         // Perform vector similarity search
         const similarChunks = await performVectorSimilaritySearch(
@@ -389,13 +357,13 @@ const worker = new Worker(
           },
           { jobId: `synthesisOpinion-${resourceId}` }
         );
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Internal coherence analysis failed for resource ${resourceId}:`, error);
         await prisma.executionLog.update({
           where: { id: taskId },
           data: {
             status: "FAILED",
-            errorMessage: error.message,
+            errorMessage: (error as Error).message, // Type assertion for error message
             endTime: new Date(),
           },
         });
@@ -448,14 +416,14 @@ const worker = new Worker(
         const response = result.response;
         const text = response.text();
 
-        let synthesisOutput: any;
+        let synthesisOutput: SynthesisOpinionOutput; // Changed from any to the defined interface
         try {
-          synthesisOutput = JSON.parse(text);
-        } catch (jsonError) {
+          synthesisOutput = JSON.parse(text) as SynthesisOpinionOutput; // Explicitly cast to the interface
+        } catch { // Removed jsonError as it's not used
           console.warn("AI response for synthesis was not valid JSON, attempting to extract JSON from text:", text);
           const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
           if (jsonMatch && jsonMatch[1]) {
-            synthesisOutput = JSON.parse(jsonMatch[1]);
+            synthesisOutput = JSON.parse(jsonMatch[1]) as SynthesisOpinionOutput; // Explicitly cast to the interface
           } else {
             throw new Error("AI response for synthesis could not be parsed as JSON.");
           }
@@ -490,13 +458,13 @@ const worker = new Worker(
           },
           { jobId: `persistence-${resourceId}` }
         );
-      } catch (error: any) {
+      } catch (error) { // Changed from 'error: any'
         console.error(`Synthesis & opinion generation failed for resource ${resourceId}:`, error);
         await prisma.executionLog.update({
           where: { id: taskId },
           data: {
             status: "FAILED",
-            errorMessage: error.message,
+            errorMessage: (error as Error).message, // Type assertion for error message
             endTime: new Date(),
           },
         });
@@ -522,7 +490,7 @@ const worker = new Worker(
       });
 
       try {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => { // Explicitly typed tx
           // 1. Create ContentSummary record
           const contentSummary = await tx.contentSummary.create({
             data: {

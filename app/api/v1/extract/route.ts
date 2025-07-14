@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { prisma, redis } from "@/lib/config";
+import { systemConfig } from "@/config/system";
+const { db: { prisma }, redis: { client: redis } } = systemConfig;
 
 // Input validation schema
 const ExtractRequestSchema = z.object({

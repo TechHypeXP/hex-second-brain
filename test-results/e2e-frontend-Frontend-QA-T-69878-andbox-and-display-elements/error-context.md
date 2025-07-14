@@ -1,0 +1,61 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - text: Second Brain
+  - navigation:
+    - list:
+      - listitem:
+        - link "Debate Prep":
+          - /url: /debate-prep
+      - listitem:
+        - link "Operational Dashboard":
+          - /url: /dashboard
+      - listitem:
+        - link "Interactive Report":
+          - /url: /report
+      - listitem:
+        - link "Ingestion Sandbox":
+          - /url: /sandbox
+- main:
+  - main:
+    - heading "Your Knowledge, Amplified." [level=1]
+    - paragraph: Organize, process, and retrieve your resources with the power of AI.
+    - link "Get Started":
+      - /url: /dashboard
+  - text: © 2025 Second Brain. All rights reserved.
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+- button "Open issues overlay": 1 Issue
+- navigation:
+  - button "previous" [disabled]:
+    - img "previous"
+  - text: 1/1
+  - button "next" [disabled]:
+    - img "next"
+- img
+- img
+- text: Next.js 15.3.5 Turbopack
+- img
+- dialog "Build Error":
+  - text: Build Error
+  - button "Copy Stack Trace":
+    - img
+  - link "Go to related documentation":
+    - /url: https://nextjs.org/docs/messages/module-not-found
+    - img
+  - link "Learn more about enabling Node.js inspector for server code with Chrome DevTools":
+    - /url: https://nextjs.org/docs/app/building-your-application/configuring/debugging#server-side-code
+    - img
+  - paragraph: "Module not found: Can't resolve '@/components/ui/IngestionSandbox'"
+  - img
+  - text: ./app/sandbox/page.tsx (1:1)
+  - button "Open in editor":
+    - img
+  - text: "Module not found: Can't resolve '@/components/ui/IngestionSandbox' > 1 | import IngestionSandbox from '@/components/ui/IngestionSandbox'; | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 2 | 3 | export default function SandboxPage() { 4 | return <IngestionSandbox />; Import map: aliased to relative './components/ui/IngestionSandbox' inside of [project]/"
+  - link "https://nextjs.org/docs/messages/module-not-found":
+    - /url: https://nextjs.org/docs/messages/module-not-found
+- contentinfo:
+  - paragraph: This error occurred during the build process and can only be dismissed by fixing the error.
+```

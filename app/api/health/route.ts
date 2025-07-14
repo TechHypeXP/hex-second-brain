@@ -1,7 +1,7 @@
 // File: app/api/health/route.ts
 
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { Redis } from "ioredis";
 import { Pinecone } from "@pinecone-database/pinecone";
 
