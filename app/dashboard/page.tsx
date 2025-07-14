@@ -1,4 +1,4 @@
-import OperationalDashboard from '../app/components/OperationalDashboard';
+import OperationalDashboard from '../components/OperationalDashboard';
 
 export default function DashboardPage() {
   return <OperationalDashboard />;
